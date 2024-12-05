@@ -1,1 +1,1 @@
-![Goo-Dood Idling](/Showcase/Showcase-GIF1)
+![Goo-Dood Idling](Showcase/Showcase-GIF1.gif)
