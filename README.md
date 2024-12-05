@@ -15,5 +15,6 @@
       <img src=Showcase/Showcase-GIF3.gif>
       <h2 style="color:green"><u>Solo Development</u></h2>
       <p>Goo-Dood is developed entirely by me. From art, to animations, to gameplay and more—I am the sole creator!</p>
+      <p>(Terrain tiles were obtained from https://itch.io/<br>an excellent website for royalty free game assets)</p>
   </div>
 </div>
