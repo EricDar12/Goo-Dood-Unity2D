@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine.Assertions.Must;
+using UnityEngine.Assertions;
 
 public class PlayerMovement : MonoBehaviour {
 
@@ -15,8 +16,8 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] private float maxFallSpeed = 20f;
     [SerializeField] private float wallJumpForce = 5f;
     [SerializeField] private float maxCoyoteTime = 0.2f;
-    
-
+    [SerializeField] private float maxJumpBuffer = 0.2f;
+   
     [Header("Ground Check Settings")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.9f, 0.1f);
@@ -26,15 +27,21 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] private Vector2 wallCheckSize = new Vector2(0.1f, 0.9f);
     [SerializeField] private float wallCheckDistance = 0.1f;
 
+    [Header("Movement Tuning")]
+    [SerializeField] private float groundedSlowDown = 0.05f;
+    [SerializeField] private float jumpingSlowDown = 0.1f;
+    [SerializeField] private float forwardJumpBoost = 1.2f;
+
+    internal float originalGravity { get; private set; }
+    private Vector2 velocity = Vector2.zero;
     private float horizontalMove;
     private float verticalMove;
-    private Vector2 velocity = Vector2.zero;
-    internal float originalGravity { get; private set; }
     private bool isGrounded;
     private bool hasReleasedJump;
     private float previousVelocityY;
     private bool isModifyingGravity;
     private float coyoteTimer;
+    private float jumpBufferTimer;
     private bool isFalling;
     private bool canDash = true;
     private bool isWallJumping;
@@ -54,19 +61,25 @@ public class PlayerMovement : MonoBehaviour {
     private SpriteRenderer sr;
 
     //TODO Migrate to the new input system
-
     void Start() {
+
         rb = GetComponent<Rigidbody2D>();
+        Assert.IsNotNull(rb, "RigidBody2D component is required");
+
         sr = GetComponent<SpriteRenderer>();
+        Assert.IsNotNull(sr, "SpriteRenderer component is required");
+
         bc = GetComponent<BoxCollider2D>();
+        Assert.IsNotNull(bc, "BoxCollider2D component is required");
+
         originalGravity = rb.gravityScale;
     }
 
     void Update() {
-        MovementInput();
-        CheckJump();
-        CheckJumpState();
         CheckJumpReleased();
+        MovementInput();
+        CheckJumpBuffer();
+        CheckCoyoteTime();
         CheckWallJumpInput();
         CheckDashInput();
         FlipSprite(horizontalMove);
@@ -75,16 +88,14 @@ public class PlayerMovement : MonoBehaviour {
     void FixedUpdate() {
         GroundedCheck();
         WallCheck();
-        CheckCoyoteTime();
         ApplyMovement();
+        CheckJump();
+        CheckJumpState();
         setRigidBodyVelocites();
     }
 
     private bool IsPlayerDead() {
-        if (DeathHandler.CurrentState == DeathHandler.PlayerState.Dying || DeathHandler.CurrentState == DeathHandler.PlayerState.Dead) {
-            return true;
-        }
-        return false;
+        return (DeathHandler.CurrentState == DeathHandler.PlayerState.Dying || DeathHandler.CurrentState == DeathHandler.PlayerState.Dead);
     }
 
     private void setRigidBodyVelocites() {
@@ -99,7 +110,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void ApplyMovement() {
 
-        float slowDownAmount = isJumping ? 0.11f : 0.07f;
+        float slowDownAmount = isJumping ? jumpingSlowDown : groundedSlowDown;
 
         if (!isDashing && !isWallJumping) {
             Vector2 targetVelocityX = new Vector2(horizontalMove * movementSpeed, Mathf.Max(rb.velocity.y, -maxFallSpeed));
@@ -108,9 +119,9 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void CheckJump() {
-        if (!isDashing && (coyoteTimer > 0f && Input.GetButtonDown("Jump"))) {
-            rb.velocity = new Vector2(rb.velocity.x * 1.20f, jumpForce);
-            rb.AddForce(rb.velocity.normalized * 1.5f, ForceMode2D.Impulse);
+        if (!isDashing && (coyoteTimer > 0f && jumpBufferTimer > 0f)) {
+            rb.velocity = new Vector2(rb.velocity.x * forwardJumpBoost, jumpForce);
+            jumpBufferTimer = 0f;
             isJumping = true;
         }
     }
@@ -150,11 +161,11 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void CheckJumpReleased() {
-        if (!isWallJumping && Input.GetButtonUp("Jump") && rb.velocity.y > 0.1f) {
+        // This doesn't work!!!
+        if ((!isWallJumping && !isDashing) && Input.GetButtonUp("Jump") && rb.velocity.y > 0.1f) {
             hasReleasedJump = true;
             coyoteTimer = 0f;
             rb.gravityScale = higherGravity;
-            // This fucks with the dash
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.65f);
         }
     }
@@ -162,7 +173,7 @@ public class PlayerMovement : MonoBehaviour {
     private IEnumerator ApplyHalfGravityAtPeak() {
 
         isModifyingGravity = true;
-        rb.gravityScale = originalGravity / 2;
+        rb.gravityScale = originalGravity / 2f;
 
         yield return new WaitForSeconds(0.1f);
 
@@ -175,7 +186,16 @@ public class PlayerMovement : MonoBehaviour {
             coyoteTimer = maxCoyoteTime;
         }
         else {
-            coyoteTimer -= Time.deltaTime;
+            coyoteTimer = coyoteTimer > 0f ? coyoteTimer -= Time.deltaTime : 0f;
+        }
+    }
+
+    private void CheckJumpBuffer() {
+        if (Input.GetButtonDown("Jump")) {
+            jumpBufferTimer = maxJumpBuffer;
+        } 
+        else {
+            jumpBufferTimer = jumpBufferTimer > 0f ? jumpBufferTimer -= Time.deltaTime : 0f;
         }
     }
 
@@ -190,8 +210,10 @@ public class PlayerMovement : MonoBehaviour {
         rb.gravityScale = originalGravity;
         sr.flipX = !isFacingLeft;
         isWallJumping = true;
-        // Allow instantaneous walljumping
+
+        // Set flag for instantaneous wall jumping
         canWallJumpAgain = true;
+
         hasReleasedJump = false;
 
         // Jump in the opposite direction the player is facing
@@ -250,7 +272,8 @@ public class PlayerMovement : MonoBehaviour {
             OnLanded();
         }
 
-        if (isGrounded && !canDash) {   
+        // Allows dash to reset when dashing horizontally, but prevents incorrect resets when dashing off the ground
+        if (isGrounded && (!canDash && !isDashing)) {
             canDash = true;
         }
     }
@@ -267,6 +290,7 @@ public class PlayerMovement : MonoBehaviour {
         isJumping = false;
         hasReleasedJump = false;
         canDash = true;
+        isWallJumping = false;
         canWallJumpAgain = false;
         coyoteTimer = maxCoyoteTime;
         rb.gravityScale = originalGravity;
