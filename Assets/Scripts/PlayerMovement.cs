@@ -74,12 +74,12 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void Update() {
-        CheckJumpReleased();
-        MovementInput();
-        CheckJumpBuffer();
-        CheckCoyoteTime();
+        CheckJumpInputReleased();
+        CaptureMovementInput();
+        UpdateJumpBuffer();
+        UpdateCoyoteTime();
         WallJump();
-        CheckDashInput();
+        Dash();
         setRigidBodyVelocites();
         FlipSprite(_horizontalMove);
     }
@@ -87,18 +87,18 @@ public class PlayerMovement : MonoBehaviour {
     void FixedUpdate() {
         GroundedCheck();
         WallCheck();
-        ApplyMovement();
+        ApplyMovementInput();
         Jump();
         CheckJumpState();
     }
 
     #region Horizontal Movement Input
-    private void MovementInput() {
+    private void CaptureMovementInput() {
         _horizontalMove = Input.GetAxisRaw("Horizontal");
         _verticalMove = Input.GetAxisRaw("Vertical");
     }
 
-    private void ApplyMovement() {
+    private void ApplyMovementInput() {
 
         float slowDownAmount = IsJumping ? _jumpingSlowDown : _groundedSlowDown;
 
@@ -167,7 +167,7 @@ public class PlayerMovement : MonoBehaviour {
         _isModifyingGravity = false;
     }
 
-    private void CheckJumpReleased() {
+    private void CheckJumpInputReleased() {
         // If jump is released when the player is jumping && moving up, && neither dashing/wall jumping, cut the jump height 
         if (Input.GetButtonUp("Jump") && IsJumping && (!_isWallJumping && !IsDashing) && _rb.velocity.y > 0.1f) {
             _hasReleasedJump = true;
@@ -176,7 +176,7 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    private void CheckCoyoteTime() {
+    private void UpdateCoyoteTime() {
         if (_isGrounded) {
             _coyoteTimer = _maxCoyoteTime;
         }
@@ -185,7 +185,7 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 
-    private void CheckJumpBuffer() {
+    private void UpdateJumpBuffer() {
         if (Input.GetButtonDown("Jump")) {
             _jumpBufferTimer = _maxJumpBuffer;
         }
@@ -230,7 +230,7 @@ public class PlayerMovement : MonoBehaviour {
     #endregion
 
     #region Dash Methods
-    private void CheckDashInput() {
+    private void Dash() {
         if (!IsDashing && (_canDash && Input.GetKeyDown(KeyCode.C))) {
             StartCoroutine(PerformDash());
         }
@@ -289,8 +289,7 @@ public class PlayerMovement : MonoBehaviour {
     #region Helper Methods
     private void OnLanded() {
         IsJumping = false;
-        //_hasReleasedJump = false;
-        _hasReleasedJump = Input.GetButtonUp("Jump");
+        _hasReleasedJump = false;
         _canDash = true;
         _isWallJumping = false;
         _canWallJumpAgain = false;
