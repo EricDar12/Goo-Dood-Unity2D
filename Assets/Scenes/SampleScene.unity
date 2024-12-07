@@ -3315,7 +3315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c7243577ba860f47963c00add874497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _trailDelay: 0.01
+  _trailDelay: 0.35
   _trailDelayLifetime: 1
   _trailPrefab: {fileID: 4505527260777914667, guid: 75b00de15c199bb44a8ef9ec327e462e, type: 3}
 --- !u!1 &690540411
