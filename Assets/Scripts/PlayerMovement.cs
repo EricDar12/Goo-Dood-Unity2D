@@ -48,7 +48,6 @@ public class PlayerMovement : MonoBehaviour {
     private bool _isFacingLeft;
     private bool _isWalled;
 
-    // Animation Dependent Properties
     public float XVelocity { get; private set; }
     public float YVelocity { get; private set; }
     public bool IsJumping { get; private set; }
@@ -58,7 +57,6 @@ public class PlayerMovement : MonoBehaviour {
     private Rigidbody2D _rb;
     private SpriteRenderer _sr;
 
-    //TODO Migrate to the new input system
     void Start() {
 
         _rb = GetComponent<Rigidbody2D>();
@@ -93,6 +91,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     #region Horizontal Movement Input
+
     private void CaptureMovementInput() {
         _horizontalMove = Input.GetAxisRaw("Horizontal");
         _verticalMove = Input.GetAxisRaw("Vertical");
@@ -107,9 +106,10 @@ public class PlayerMovement : MonoBehaviour {
             _rb.velocity = Vector2.SmoothDamp(_rb.velocity, targetVelocityX, ref _velocity, slowDownAmount);
         }
     }
-    #endregion
 
+    #endregion
     #region Jump Input and Checks
+
     private void Jump() {
         if (!IsDashing && (_coyoteTimer > 0f && _jumpBufferTimer > 0f)) {
             _rb.velocity = new Vector2(_rb.velocity.x * _forwardJumpBoost, _jumpForce);
@@ -227,9 +227,10 @@ public class PlayerMovement : MonoBehaviour {
 
         _isWallJumping = false;
     }
-    #endregion
 
+    #endregion
     #region Dash Methods
+
     private void Dash() {
         if (!IsDashing && (_canDash && Input.GetKeyDown(KeyCode.C))) {
             StartCoroutine(PerformDash());
@@ -258,9 +259,10 @@ public class PlayerMovement : MonoBehaviour {
 
         IsDashing = false;
     }
-    #endregion
 
+    #endregion
     #region Collision Checks
+
     private void GroundedCheck() {
         Vector2 boxCastOrigin = (Vector2)transform.position + _bc.offset;
         RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, _groundCheckSize, 0f, Vector2.down, _groundCheckDistance, _groundLayer);
@@ -284,9 +286,10 @@ public class PlayerMovement : MonoBehaviour {
 
         _isWalled = hit.collider != null;
     }
-    #endregion
 
+    #endregion
     #region Helper Methods
+
     private void OnLanded() {
         IsJumping = false;
         _hasReleasedJump = false;
@@ -318,9 +321,10 @@ public class PlayerMovement : MonoBehaviour {
     private void ApplyGravity(float newGravity) {
         _rb.gravityScale = IsPlayerDead() ? 0f : newGravity;
     }
-    #endregion
 
+    #endregion
     #region Gizmos
+
     private void OnDrawGizmos() {
         if (_bc != null) {
 
