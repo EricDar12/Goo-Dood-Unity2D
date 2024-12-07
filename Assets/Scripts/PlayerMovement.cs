@@ -1,78 +1,76 @@
-using UnityEngine;
 using System.Collections;
-using Unity.VisualScripting;
-using UnityEngine.Assertions.Must;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 public class PlayerMovement : MonoBehaviour {
 
     [Header("Movement Settings")]
-    [SerializeField] private float movementSpeed = 5f;
-    [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private float higherGravity = 4.5f;
-    [SerializeField] private float dashPower = 15f;
-    [SerializeField] private float dashDuration = 0.2f;
-    [SerializeField] private float wallJumpDuration = 0.2f;
-    [SerializeField] private float maxFallSpeed = 20f;
-    [SerializeField] private float wallJumpForce = 5f;
-    [SerializeField] private float maxCoyoteTime = 0.2f;
-    [SerializeField] private float maxJumpBuffer = 0.2f;
+    [SerializeField] private float _movementSpeed = 5f;
+    [SerializeField] private float _jumpForce = 10f;
+    [SerializeField] private float _higherGravity = 4.5f;
+    [SerializeField] private float _dashPower = 15f;
+    [SerializeField] private float _dashDuration = 0.2f;
+    [SerializeField] private float _wallJumpDuration = 0.2f;
+    [SerializeField] private float _maxFallSpeed = 20f;
+    [SerializeField] private float _wallJumpForce = 5f;
+    [SerializeField] private float _maxCoyoteTime = 0.2f;
+    [SerializeField] private float _maxJumpBuffer = 0.2f;
    
     [Header("Ground Check Settings")]
-    [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.9f, 0.1f);
-    [SerializeField] private float groundCheckDistance = 0.1f;
+    [SerializeField] private LayerMask _groundLayer;
+    [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.9f, 0.1f);
+    [SerializeField] private float _groundCheckDistance = 0.1f;
 
     [Header("Wall Check Settings")]
-    [SerializeField] private Vector2 wallCheckSize = new Vector2(0.1f, 0.9f);
-    [SerializeField] private float wallCheckDistance = 0.1f;
+    [SerializeField] private Vector2 _wallCheckSize = new Vector2(0.1f, 0.9f);
+    [SerializeField] private float _wallCheckDistance = 0.1f;
 
     [Header("Movement Tuning")]
-    [SerializeField] private float groundedSlowDown = 0.05f;
-    [SerializeField] private float jumpingSlowDown = 0.1f;
-    [SerializeField] private float forwardJumpBoost = 1.2f;
+    [SerializeField] private float _groundedSlowDown = 0.05f;
+    [SerializeField] private float _jumpingSlowDown = 0.1f;
+    [SerializeField] private float _forwardJumpBoost = 1.2f;
 
-    public float originalGravity { get; private set; }
-    private Vector2 velocity = Vector2.zero;
-    private float horizontalMove;
-    private float verticalMove;
-    private bool isGrounded;
-    private bool hasReleasedJump;
-    private float previousVelocityY;
-    private bool isModifyingGravity;
-    private float coyoteTimer;
-    private float jumpBufferTimer;
-    private bool isFalling;
-    private bool canDash = true;
-    private bool isWallJumping;
-    private bool canWallJumpAgain = false;
-    private float fallTimer;
-    private bool isFacingLeft;
-    private bool isWalled;
+    public float OriginalGravity { get; private set; }
+    private Vector2 _velocity = Vector2.zero;
+    private float _horizontalMove;
+    private float _verticalMove;
+    private bool _isGrounded;
+    private bool _hasReleasedJump;
+    private float _previousVelocityY;
+    private bool _isModifyingGravity;
+    private float _coyoteTimer;
+    private float _jumpBufferTimer;
+    private bool _isFalling;
+    private bool _canDash = true;
+    private bool _isWallJumping;
+    private bool _canWallJumpAgain = false;
+    private float _fallTimer;
+    private bool _isFacingLeft;
+    private bool _isWalled;
 
     // Animation Dependent Properties
-    public float xVelocity { get; private set; }
-    public float yVelocity { get; private set; }
-    public bool isJumping { get; private set; }
-    public bool isDashing { get; private set; }
+    public float XVelocity { get; private set; }
+    public float YVelocity { get; private set; }
+    public bool IsJumping { get; private set; }
+    public bool IsDashing { get; private set; }
 
-    private BoxCollider2D bc;
-    private Rigidbody2D rb;
-    private SpriteRenderer sr;
+    private BoxCollider2D _bc;
+    private Rigidbody2D _rb;
+    private SpriteRenderer _sr;
 
     //TODO Migrate to the new input system
     void Start() {
 
-        rb = GetComponent<Rigidbody2D>();
-        Assert.IsNotNull(rb, "RigidBody2D component is required");
+        _rb = GetComponent<Rigidbody2D>();
+        Assert.IsNotNull(_rb, "RigidBody2D component is required");
 
-        sr = GetComponent<SpriteRenderer>();
-        Assert.IsNotNull(sr, "SpriteRenderer component is required");
+        _sr = GetComponent<SpriteRenderer>();
+        Assert.IsNotNull(_sr, "SpriteRenderer component is required");
 
-        bc = GetComponent<BoxCollider2D>();
-        Assert.IsNotNull(bc, "BoxCollider2D component is required");
+        _bc = GetComponent<BoxCollider2D>();
+        Assert.IsNotNull(_bc, "BoxCollider2D component is required");
 
-        originalGravity = rb.gravityScale;
+        OriginalGravity = _rb.gravityScale;
     }
 
     void Update() {
@@ -82,7 +80,7 @@ public class PlayerMovement : MonoBehaviour {
         CheckCoyoteTime();
         CheckWallJumpInput();
         CheckDashInput();
-        FlipSprite(horizontalMove);
+        FlipSprite(_horizontalMove);
     }
 
     void FixedUpdate() {
@@ -99,231 +97,236 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void setRigidBodyVelocites() {
-        xVelocity = rb.velocity.x;
-        yVelocity = rb.velocity.y;
+        XVelocity = _rb.velocity.x;
+        YVelocity = _rb.velocity.y;
     }
 
     private void MovementInput() {
-        horizontalMove = Input.GetAxisRaw("Horizontal");
-        verticalMove = Input.GetAxisRaw("Vertical");
+        _horizontalMove = Input.GetAxisRaw("Horizontal");
+        _verticalMove = Input.GetAxisRaw("Vertical");
     }
 
     private void ApplyMovement() {
 
-        float slowDownAmount = isJumping ? jumpingSlowDown : groundedSlowDown;
+        float slowDownAmount = IsJumping ? _jumpingSlowDown : _groundedSlowDown;
 
-        if (!isDashing && !isWallJumping) {
-            Vector2 targetVelocityX = new Vector2(horizontalMove * movementSpeed, Mathf.Max(rb.velocity.y, -maxFallSpeed));
-            rb.velocity = Vector2.SmoothDamp(rb.velocity, targetVelocityX, ref velocity, slowDownAmount);
+        if (!IsDashing && !_isWallJumping) {
+            Vector2 targetVelocityX = new Vector2(_horizontalMove * _movementSpeed, Mathf.Max(_rb.velocity.y, -_maxFallSpeed));
+            _rb.velocity = Vector2.SmoothDamp(_rb.velocity, targetVelocityX, ref _velocity, slowDownAmount);
         }
     }
 
     private void CheckJump() {
-        if (!isDashing && (coyoteTimer > 0f && jumpBufferTimer > 0f)) {
-            rb.velocity = new Vector2(rb.velocity.x * forwardJumpBoost, jumpForce);
-            jumpBufferTimer = 0f;
-            coyoteTimer = 0f;
-            isJumping = true;
+        if (!IsDashing && (_coyoteTimer > 0f && _jumpBufferTimer > 0f)) {
+            _rb.velocity = new Vector2(_rb.velocity.x * _forwardJumpBoost, _jumpForce);
+            _jumpBufferTimer = 0f;
+            _coyoteTimer = 0f;
+            IsJumping = true;
         }
     }
 
     private void CheckJumpState() {
 
-        if (isDashing) {
-            rb.gravityScale = 0f;
+        if (IsDashing) {
+            ApplyGravity(0f);
             return;
         }
 
-        if (isModifyingGravity) {
-            previousVelocityY = rb.velocity.y;
+        if (_isModifyingGravity) {
+            _previousVelocityY = _rb.velocity.y;
             return;
         }
 
-        float currentVelocityY = rb.velocity.y;
+        float currentVelocityY = _rb.velocity.y;
 
         // If jump is held, apply half gravity at the peak for a short moment
-        if ((isJumping && !hasReleasedJump) && !isWallJumping && !canWallJumpAgain 
-            && previousVelocityY > 0f && currentVelocityY <= 0f) {
-            previousVelocityY = rb.velocity.y;
+        if ((IsJumping && !_hasReleasedJump) && !_isWallJumping && !_canWallJumpAgain 
+            && _previousVelocityY > 0f && currentVelocityY <= 0f) {
+            _previousVelocityY = _rb.velocity.y;
             StartCoroutine(ApplyHalfGravityAtPeak());
             return;
         }
 
         // if the player is falling naturally, smoothly lerp to higher gravity
-        if (!hasReleasedJump && (!isGrounded && rb.velocity.y < 0.1f)) {
-            isFalling = true;
-            fallTimer += Time.deltaTime;
-            float t = Mathf.Clamp01(fallTimer / 0.7f);
-            rb.gravityScale = Mathf.Lerp(originalGravity, higherGravity, t);
+        if (!_hasReleasedJump && (!_isGrounded && _rb.velocity.y < 0.1f)) {
+            _isFalling = true;
+            _fallTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(_fallTimer / 0.7f);
+            ApplyGravity(Mathf.Lerp(OriginalGravity, _higherGravity, t));
         }
         else {
-            isFalling = false;
-            fallTimer = 0f;
+            _isFalling = false;
+            _fallTimer = 0f;
         }
 
-        previousVelocityY = currentVelocityY;
+        _previousVelocityY = currentVelocityY;
     }
 
     private void CheckJumpReleased() {
-        // This doesn't work!!!
-        if ((!isWallJumping && !isDashing) && Input.GetButtonUp("Jump") && rb.velocity.y > 0.1f) {
-            hasReleasedJump = true;
-            coyoteTimer = 0f;
-            rb.gravityScale = higherGravity;
-            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.65f);
+        // This doesn't work with the jump buffer!!!
+        if ((!_isWallJumping && !IsDashing) && Input.GetButtonUp("Jump") && _rb.velocity.y > 0.1f) {
+            _hasReleasedJump = true;
+            _coyoteTimer = 0f;
+            ApplyGravity(_higherGravity);
+            _rb.velocity = new Vector2(_rb.velocity.x, _rb.velocity.y * 0.65f);
         }
     }
 
     private IEnumerator ApplyHalfGravityAtPeak() {
 
-        isModifyingGravity = true;
-        rb.gravityScale = originalGravity / 2f;
+        _isModifyingGravity = true;
+        ApplyGravity(OriginalGravity / 2f);
 
         yield return new WaitForSeconds(0.1f);
 
-        rb.gravityScale = originalGravity;
-        isModifyingGravity = false;
+        ApplyGravity(OriginalGravity);
+        _isModifyingGravity = false;
     }
 
     private void CheckCoyoteTime() {
-        if (isGrounded) {
-            coyoteTimer = maxCoyoteTime;
+        if (_isGrounded) {
+            _coyoteTimer = _maxCoyoteTime;
         }
-        else if (coyoteTimer > 0f) {
-            coyoteTimer -= Time.deltaTime;
+        else if (_coyoteTimer > 0f) {
+            _coyoteTimer -= Time.deltaTime;
         }
     }
 
     private void CheckJumpBuffer() {
         if (Input.GetButtonDown("Jump")) {
-            jumpBufferTimer = maxJumpBuffer;
+            _jumpBufferTimer = _maxJumpBuffer;
         } 
-        else if (jumpBufferTimer > 0f) {
-            jumpBufferTimer -= Time.deltaTime;
+        else if (_jumpBufferTimer > 0f) {
+            _jumpBufferTimer -= Time.deltaTime;
         }
     }
 
     private void CheckWallJumpInput() {
-        if (isWalled && (canWallJumpAgain || hasReleasedJump || isFalling) && Input.GetButtonDown("Jump")) {
+        if (_isWalled && (_canWallJumpAgain || _hasReleasedJump || _isFalling) && Input.GetButtonDown("Jump")) {
             StartCoroutine(PerformWallJump());
         }
     }
 
     private IEnumerator PerformWallJump() {
 
-        rb.gravityScale = originalGravity;
-        sr.flipX = !isFacingLeft;
-        isWallJumping = true;
+        ApplyGravity(OriginalGravity);
+        _sr.flipX = !_isFacingLeft;
+        _isWallJumping = true;
 
         // Set flag for instantaneous wall jumping
-        canWallJumpAgain = true;
-        hasReleasedJump = false;
+        _canWallJumpAgain = true;
+        _hasReleasedJump = false;
 
         // Jump in the opposite direction the player is facing
-        Vector2 wallJumpDirection = isFacingLeft ? Vector2.right : Vector2.left;
+        Vector2 wallJumpDirection = _isFacingLeft ? Vector2.right : Vector2.left;
 
-        isFacingLeft = !isFacingLeft;
+        _isFacingLeft = !_isFacingLeft;
 
-        rb.velocity = new Vector2(wallJumpDirection.x * wallJumpForce, jumpForce);
+        _rb.velocity = new Vector2(wallJumpDirection.x * _wallJumpForce, _jumpForce);
 
-        float originalMovementSpeed = movementSpeed;
-        movementSpeed = 0f;
+        float originalMovementSpeed = _movementSpeed;
+        _movementSpeed = 0f;
 
-        yield return new WaitForSeconds(wallJumpDuration);
+        yield return new WaitForSeconds(_wallJumpDuration);
 
-        movementSpeed = originalMovementSpeed;
+        _movementSpeed = originalMovementSpeed;
 
-        isWallJumping = false;
+        _isWallJumping = false;
 
     }
 
     private void CheckDashInput() {
-        if (!isDashing && (canDash && Input.GetKeyDown(KeyCode.C))) {
+        if (!IsDashing && (_canDash && Input.GetKeyDown(KeyCode.C))) {
             StartCoroutine(PerformDash());
         }
     }
 
     private IEnumerator PerformDash() {
 
-        rb.gravityScale = 0;
-        isDashing = true;
-        canDash = false;
-        hasReleasedJump = false;
+        ApplyGravity(0f);
+        IsDashing = true;
+        _canDash = false;
+        _hasReleasedJump = false;
 
-        Vector2 dashDirection = new Vector2(horizontalMove, verticalMove).normalized;
+        Vector2 dashDirection = new Vector2(_horizontalMove, _verticalMove).normalized;
 
         if (dashDirection == Vector2.zero) {
-            dashDirection = isFacingLeft ? Vector2.left : Vector2.right;
+            dashDirection = _isFacingLeft ? Vector2.left : Vector2.right;
         }
 
-        rb.velocity = dashDirection * dashPower;
+        _rb.velocity = dashDirection * _dashPower;
 
-        yield return new WaitForSeconds(dashDuration);
+        yield return new WaitForSeconds(_dashDuration);
+        
+        ApplyGravity(OriginalGravity);
+        _rb.velocity = Vector2.zero;
 
-        rb.gravityScale = IsPlayerDead() ? 0f : originalGravity;
-        rb.velocity = Vector2.zero;
-
-        isDashing = false;
+        IsDashing = false;
     }
 
     private void GroundedCheck() {
-        Vector2 boxCastOrigin = (Vector2) transform.position + bc.offset;
-        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, groundCheckSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
+        Vector2 boxCastOrigin = (Vector2) transform.position + _bc.offset;
+        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, _groundCheckSize, 0f, Vector2.down, _groundCheckDistance, _groundLayer);
 
-        bool wasGrounded = isGrounded;
-        isGrounded = hit.collider != null;
-        if (isGrounded && !wasGrounded) {
+        bool wasGrounded = _isGrounded;
+        _isGrounded = hit.collider != null;
+        if (_isGrounded && !wasGrounded) {
             OnLanded();
         }
 
         // Allows dash to reset when dashing horizontally, but prevents incorrect resets when dashing off the ground
-        if (isGrounded && (!canDash && !isDashing)) {
-            canDash = true;
+        if (_isGrounded && (!_canDash && !IsDashing)) {
+            _canDash = true;
         }
     }
 
     private void WallCheck() {
-        Vector2 boxCastOrigin = (Vector2) transform.position + bc.offset;
-        Vector2 facingDirection = isFacingLeft ? Vector2.left : Vector2.right;
-        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, wallCheckSize, 0f, facingDirection, wallCheckDistance, groundLayer);
+        Vector2 boxCastOrigin = (Vector2) transform.position + _bc.offset;
+        Vector2 facingDirection = _isFacingLeft ? Vector2.left : Vector2.right;
+        RaycastHit2D hit = Physics2D.BoxCast(boxCastOrigin, _wallCheckSize, 0f, facingDirection, _wallCheckDistance, _groundLayer);
 
-        isWalled = hit.collider != null;
+        _isWalled = hit.collider != null;
     }
 
     private void OnLanded() {
-        isJumping = false;
-        hasReleasedJump = false;
-        canDash = true;
-        isWallJumping = false;
-        canWallJumpAgain = false;
-        rb.gravityScale = originalGravity;
+        IsJumping = false;
+        //_hasReleasedJump = false;
+        _hasReleasedJump = Input.GetButtonUp("Jump");
+        _canDash = true;
+        _isWallJumping = false;
+        _canWallJumpAgain = false;
+        ApplyGravity(OriginalGravity);
     }
 
     private void FlipSprite(float horizontalMovement) {
 
-        if (isWallJumping || isDashing) return;
+        if (_isWallJumping || IsDashing) return;
 
         if (horizontalMovement != 0) {
-            isFacingLeft = sr.flipX = horizontalMovement < 0;
+            _isFacingLeft = _sr.flipX = horizontalMovement < 0;
         }
     }
 
-    private void OnDrawGizmos() {
-        if (bc != null) {
+    private void ApplyGravity(float newGravity) {
+        _rb.gravityScale = IsPlayerDead() ? 0f : newGravity;
+    }
 
-            Vector2 boxCastOrigin = (Vector2)transform.position + bc.offset;
+    private void OnDrawGizmos() {
+        if (_bc != null) {
+
+            Vector2 boxCastOrigin = (Vector2)transform.position + _bc.offset;
 
             // Ground Check Visualization
-            Gizmos.color = isGrounded ? Color.green : Color.red;
-            Vector2 groundCheckOrigin = boxCastOrigin - new Vector2(0, groundCheckDistance);
-            Gizmos.DrawWireCube(groundCheckOrigin, groundCheckSize);
+            Gizmos.color = _isGrounded ? Color.green : Color.red;
+            Vector2 groundCheckOrigin = boxCastOrigin - new Vector2(0, _groundCheckDistance);
+            Gizmos.DrawWireCube(groundCheckOrigin, _groundCheckSize);
 
             // Wall Check Visualization
-            Gizmos.color = isWalled ? Color.green : Color.red;
-            Vector2 facingDirection = isFacingLeft ? Vector2.left : Vector2.right;
-            Vector2 wallCheckEndPosition = boxCastOrigin + facingDirection * wallCheckDistance;
+            Gizmos.color = _isWalled ? Color.green : Color.red;
+            Vector2 facingDirection = _isFacingLeft ? Vector2.left : Vector2.right;
+            Vector2 wallCheckEndPosition = boxCastOrigin + facingDirection * _wallCheckDistance;
 
-            Gizmos.DrawWireCube(wallCheckEndPosition, wallCheckSize);
+            Gizmos.DrawWireCube(wallCheckEndPosition, _wallCheckSize);
         }
     }
 }

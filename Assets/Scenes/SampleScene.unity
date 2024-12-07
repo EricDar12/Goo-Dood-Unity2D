@@ -3166,7 +3166,7 @@ Transform:
   m_GameObject: {fileID: 681673636}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -4.5, z: 0}
+  m_LocalPosition: {x: -13, y: -4.35, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3184,26 +3184,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 296a97fe53f98d946988318e6c068161, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 9
-  jumpForce: 17.2
-  higherGravity: 6.5
-  dashPower: 25
-  dashDuration: 0.2
-  wallJumpDuration: 0.2
-  maxFallSpeed: 20
-  wallJumpForce: 8
-  maxCoyoteTime: 0.2
-  maxJumpBuffer: 0.2
-  groundLayer:
+  _movementSpeed: 7.5
+  _jumpForce: 17.2
+  _higherGravity: 6.5
+  _dashPower: 25
+  _dashDuration: 0.2
+  _wallJumpDuration: 0.2
+  _maxFallSpeed: 20
+  _wallJumpForce: 8
+  _maxCoyoteTime: 0.2
+  _maxJumpBuffer: 0.2
+  _groundLayer:
     serializedVersion: 2
     m_Bits: 8
-  groundCheckSize: {x: 0.89, y: 0.05}
-  groundCheckDistance: 0.5
-  wallCheckSize: {x: 0.1, y: 0.95}
-  wallCheckDistance: 0.55
-  groundedSlowDown: 0.09
-  jumpingSlowDown: 0.12
-  forwardJumpBoost: 1.2
+  _groundCheckSize: {x: 0.85, y: 0.1}
+  _groundCheckDistance: 0.45
+  _wallCheckSize: {x: 0.1, y: 0.9}
+  _wallCheckDistance: 0.565
+  _groundedSlowDown: 0.05
+  _jumpingSlowDown: 0.1
+  _forwardJumpBoost: 1.2
 --- !u!212 &681673643
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3268,8 +3268,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf8a23e812d153845a497151d77f8106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  respawnPoint: {fileID: 1499749462}
-  respawnDelay: 0
+  _respawnPoint: {fileID: 1499749462}
+  _respawnDelay: 0
 --- !u!95 &681673646
 Animator:
   serializedVersion: 5
@@ -3315,9 +3315,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c7243577ba860f47963c00add874497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trailDelay: 0.0185
-  trailDelayLifetime: 1
-  trailPrefab: {fileID: 4505527260777914667, guid: 75b00de15c199bb44a8ef9ec327e462e, type: 3}
+  _trailDelay: 0.01
+  _trailDelayLifetime: 1
+  _trailPrefab: {fileID: 4505527260777914667, guid: 75b00de15c199bb44a8ef9ec327e462e, type: 3}
 --- !u!1 &690540411
 GameObject:
   m_ObjectHideFlags: 3
