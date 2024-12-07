@@ -4,18 +4,18 @@ using UnityEngine;
 
 public class AnimationController : MonoBehaviour {
 
-    private float xVelocity;
-    private float yVelocity;
-    private bool isJumping;
-    private bool isDashing;
+    private float _xVelocity;
+    private float _yVelocity;
+    private bool _isJumping;
+    private bool _isDashing;
 
-    private Animator animator;
-    private PlayerMovement playerMovement;
-    private DeathHandler.PlayerState previousState = DeathHandler.PlayerState.Alive;
+    private Animator _animator;
+    private PlayerMovement _playerMovement;
+    private DeathHandler.PlayerState _previousState = DeathHandler.PlayerState.Alive;
     
     void Start() {
-        animator = GetComponent<Animator>();
-        playerMovement = GetComponent<PlayerMovement>();
+        _animator = GetComponent<Animator>();
+        _playerMovement = GetComponent<PlayerMovement>();
     }
 
     void Update() {
@@ -24,32 +24,32 @@ public class AnimationController : MonoBehaviour {
     }
 
     private void UpdateAnimationParameters() {
-        xVelocity = playerMovement.xVelocity;
-        yVelocity = playerMovement.yVelocity;
-        isJumping = playerMovement.isJumping;
-        isDashing = playerMovement.isDashing;
+        _xVelocity = _playerMovement.XVelocity;
+        _yVelocity = _playerMovement.YVelocity;
+        _isJumping = _playerMovement.IsJumping;
+        _isDashing = _playerMovement.IsDashing;
 
-        animator.SetFloat("xVelocity", Mathf.Abs(xVelocity));
-        animator.SetFloat("yVelocity", yVelocity);
-        animator.SetBool("isJumping", isJumping);
-        animator.SetBool("isDashing", isDashing);
+        _animator.SetFloat("xVelocity", Mathf.Abs(_xVelocity));
+        _animator.SetFloat("yVelocity", _yVelocity);
+        _animator.SetBool("isJumping", _isJumping);
+        _animator.SetBool("isDashing", _isDashing);
     }
 
     private void UpdateDeathAnimationState() {
 
-        if (DeathHandler.CurrentState != previousState) {
+        if (DeathHandler.CurrentState != _previousState) {
 
             switch (DeathHandler.CurrentState) {
 
                 case DeathHandler.PlayerState.Dying:
-                    animator.SetTrigger("Die");
+                    _animator.SetTrigger("Die");
                     break;
 
                 case DeathHandler.PlayerState.Respawning:
-                    animator.SetTrigger("Respawn");
+                    _animator.SetTrigger("Respawn");
                     break;
             }
         }
-        previousState = DeathHandler.CurrentState;
+        _previousState = DeathHandler.CurrentState;
     }
 }
