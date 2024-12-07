@@ -5,49 +5,45 @@ using UnityEngine;
 public class TrailEffect : MonoBehaviour
 {
 
-    private PlayerMovement playerMovement;
-    private SpriteRenderer playerSpriteRenderer;
+    private PlayerMovement _playerMovement;
+    private SpriteRenderer _playerSpriteRenderer;
 
     [Header("Trail Configuration")]
-    [SerializeField] private float trailDelay = 0.1f;
-    [SerializeField] private float trailDelayLifetime = 1f;
-    [SerializeField] private GameObject trailPrefab;
+    [SerializeField] private float _trailDelay = 0.1f;
+    [SerializeField] private float _trailDelayLifetime = 1f;
+    [SerializeField] private GameObject _trailPrefab;
 
-    private float trailDelaySeconds;
-    private bool wasDashing = false;
+    private float _trailDelaySeconds;
+    private bool _wasDashing = false;
 
     void Start() {
-        playerMovement = GetComponent<PlayerMovement>();
-        playerSpriteRenderer = GetComponent<SpriteRenderer>();
-        trailDelaySeconds = trailDelay;
+        _playerMovement = GetComponent<PlayerMovement>();
+        _playerSpriteRenderer = GetComponent<SpriteRenderer>();
+        _trailDelaySeconds = _trailDelay;
     }
 
     void Update() {
-
-    }
-
-    private void FixedUpdate() {
         RenderDashTrail();
     }
 
     private void RenderDashTrail() {
-        if (playerMovement.isDashing) {
-            if (trailDelaySeconds > 0f) {
-                trailDelaySeconds -= Time.deltaTime;
+        if (_playerMovement.IsDashing) {
+            if (_trailDelaySeconds > 0f) {
+                _trailDelaySeconds -= Time.deltaTime;
             }
             else {
-                GameObject currentTrail = Instantiate(trailPrefab, transform.position, transform.rotation);
-                Sprite currentSprite = playerSpriteRenderer.sprite;
+                GameObject currentTrail = Instantiate(_trailPrefab, transform.position, transform.rotation);
+                Sprite currentSprite = _playerSpriteRenderer.sprite;
                 currentTrail.GetComponent<SpriteRenderer>().sprite = currentSprite;
-                currentTrail.GetComponent<SpriteRenderer>().flipX = playerSpriteRenderer.flipX;
-                Destroy(currentTrail, trailDelayLifetime);
-                trailDelaySeconds = trailDelay;
+                currentTrail.GetComponent<SpriteRenderer>().flipX = _playerSpriteRenderer.flipX;
+                Destroy(currentTrail, _trailDelayLifetime);
+                _trailDelaySeconds = _trailDelay;
             }
-            wasDashing = true;
+            _wasDashing = true;
         }
-        else if (wasDashing) {
-            trailDelaySeconds = trailDelay;
-            wasDashing = false;
+        else if (_wasDashing) {
+            _trailDelaySeconds = _trailDelay;
+            _wasDashing = false;
         }
     }
 }

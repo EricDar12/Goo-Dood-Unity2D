@@ -5,11 +5,12 @@ using UnityEngine;
 public class DeathHandler : MonoBehaviour {
 
     [Header("Respawn Settings")]
-    [SerializeField] private Transform respawnPoint;
-    [SerializeField] private float respawnDelay;
-    private Transform checkPoint;
-    private PlayerMovement playerMovement;
-    private Rigidbody2D rb;
+    [SerializeField] private Transform _respawnPoint;
+    [SerializeField] private float _respawnDelay;
+
+    private Rigidbody2D _rb;
+    private Transform _checkPoint;
+    private PlayerMovement _playerMovement;
     
     public enum PlayerState {
         Alive,
@@ -18,11 +19,11 @@ public class DeathHandler : MonoBehaviour {
         Respawning
     }
 
-    internal static PlayerState CurrentState {  get; private set; } = PlayerState.Alive;
+    public static PlayerState CurrentState {  get; private set; } = PlayerState.Alive;
 
     void Start() {
-        playerMovement = GetComponent<PlayerMovement>();
-        rb = GetComponent<Rigidbody2D>();
+        _playerMovement = GetComponent<PlayerMovement>();
+        _rb = GetComponent<Rigidbody2D>();
     }
 
     void Update() {
@@ -41,11 +42,11 @@ public class DeathHandler : MonoBehaviour {
 
             CurrentState = PlayerState.Dying;
 
-            if (rb != null) {
-                rb.velocity = Vector2.zero;
-                rb.gravityScale = 0f;
+            if (_rb != null) {
+                _rb.velocity = Vector2.zero;
+                _rb.gravityScale = 0f;
             }
-            playerMovement.enabled = false;
+            _playerMovement.enabled = false;
         }
     }
 
@@ -58,7 +59,7 @@ public class DeathHandler : MonoBehaviour {
 
     private IEnumerator RespawnPlayer() {
 
-        yield return new WaitForSeconds(respawnDelay);
+        yield return new WaitForSeconds(_respawnDelay);
 
         CurrentState = PlayerState.Respawning;
     }
@@ -67,19 +68,19 @@ public class DeathHandler : MonoBehaviour {
         // This method is actually called closer to the beginning of the respawn animation
         if (CurrentState == PlayerState.Respawning) {
 
-            rb.gravityScale = playerMovement.originalGravity;
-            transform.position = checkPoint != null ? checkPoint.position : respawnPoint.position;
+            _rb.gravityScale = _playerMovement.OriginalGravity;
+            transform.position = _checkPoint != null ? _checkPoint.position : _respawnPoint.position;
 
-            if (rb != null) {
-                rb.velocity = Vector2.zero;
+            if (_rb != null) {
+                _rb.velocity = Vector2.zero;
             }
 
-            playerMovement.enabled = true;
+            _playerMovement.enabled = true;
             CurrentState = PlayerState.Alive;
         }
     }
 
     private void SetCheckPoint(Transform newCheckPoint) {
-        checkPoint = newCheckPoint;
+        _checkPoint = newCheckPoint;
     }
 }
