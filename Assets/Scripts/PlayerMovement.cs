@@ -32,7 +32,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] private float jumpingSlowDown = 0.1f;
     [SerializeField] private float forwardJumpBoost = 1.2f;
 
-    internal float originalGravity { get; private set; }
+    public float originalGravity { get; private set; }
     private Vector2 velocity = Vector2.zero;
     private float horizontalMove;
     private float verticalMove;
@@ -51,10 +51,10 @@ public class PlayerMovement : MonoBehaviour {
     private bool isWalled;
 
     // Animation Dependent Properties
-    internal float xVelocity { get; private set; }
-    internal float yVelocity { get; private set; }
-    internal bool isJumping { get; private set; }
-    internal bool isDashing { get; private set; }
+    public float xVelocity { get; private set; }
+    public float yVelocity { get; private set; }
+    public bool isJumping { get; private set; }
+    public bool isDashing { get; private set; }
 
     private BoxCollider2D bc;
     private Rigidbody2D rb;
@@ -122,6 +122,7 @@ public class PlayerMovement : MonoBehaviour {
         if (!isDashing && (coyoteTimer > 0f && jumpBufferTimer > 0f)) {
             rb.velocity = new Vector2(rb.velocity.x * forwardJumpBoost, jumpForce);
             jumpBufferTimer = 0f;
+            coyoteTimer = 0f;
             isJumping = true;
         }
     }
@@ -140,12 +141,15 @@ public class PlayerMovement : MonoBehaviour {
 
         float currentVelocityY = rb.velocity.y;
 
+        // If jump is held, apply half gravity at the peak for a short moment
         if ((isJumping && !hasReleasedJump) && !isWallJumping && !canWallJumpAgain 
             && previousVelocityY > 0f && currentVelocityY <= 0f) {
+            previousVelocityY = rb.velocity.y;
             StartCoroutine(ApplyHalfGravityAtPeak());
             return;
         }
 
+        // if the player is falling naturally, smoothly lerp to higher gravity
         if (!hasReleasedJump && (!isGrounded && rb.velocity.y < 0.1f)) {
             isFalling = true;
             fallTimer += Time.deltaTime;
@@ -185,8 +189,8 @@ public class PlayerMovement : MonoBehaviour {
         if (isGrounded) {
             coyoteTimer = maxCoyoteTime;
         }
-        else {
-            coyoteTimer = coyoteTimer > 0f ? coyoteTimer -= Time.deltaTime : 0f;
+        else if (coyoteTimer > 0f) {
+            coyoteTimer -= Time.deltaTime;
         }
     }
 
@@ -194,8 +198,8 @@ public class PlayerMovement : MonoBehaviour {
         if (Input.GetButtonDown("Jump")) {
             jumpBufferTimer = maxJumpBuffer;
         } 
-        else {
-            jumpBufferTimer = jumpBufferTimer > 0f ? jumpBufferTimer -= Time.deltaTime : 0f;
+        else if (jumpBufferTimer > 0f) {
+            jumpBufferTimer -= Time.deltaTime;
         }
     }
 
@@ -213,7 +217,6 @@ public class PlayerMovement : MonoBehaviour {
 
         // Set flag for instantaneous wall jumping
         canWallJumpAgain = true;
-
         hasReleasedJump = false;
 
         // Jump in the opposite direction the player is facing
@@ -241,6 +244,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private IEnumerator PerformDash() {
+
         rb.gravityScale = 0;
         isDashing = true;
         canDash = false;
@@ -292,7 +296,6 @@ public class PlayerMovement : MonoBehaviour {
         canDash = true;
         isWallJumping = false;
         canWallJumpAgain = false;
-        coyoteTimer = maxCoyoteTime;
         rb.gravityScale = originalGravity;
     }
 
