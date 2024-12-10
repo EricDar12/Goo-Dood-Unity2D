@@ -161,7 +161,7 @@ public class PlayerMovement : MonoBehaviour {
         _isModifyingGravity = true;
         ApplyGravity(OriginalGravity / 2f);
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.08f);
 
         ApplyGravity(OriginalGravity);
         _isModifyingGravity = false;
@@ -177,7 +177,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void UpdateCoyoteTime() {
-        if (_isGrounded) {
+        if (_isGrounded && !IsJumping) {
             _coyoteTimer = _maxCoyoteTime;
         }
         else if (_coyoteTimer > 0f) {
@@ -196,7 +196,8 @@ public class PlayerMovement : MonoBehaviour {
 
     private void WallJump() {
         // If the player is against a wall && has released the jump button, or is falling naturally allow a wj input
-        if (_isWalled && (_hasReleasedJump || _canWallJumpAgain || _isFalling) && Input.GetButtonDown("Jump")) {
+        if (_isWalled && (_hasReleasedJump || _canWallJumpAgain || _isFalling) && _jumpBufferTimer > 0f) {
+            _jumpBufferTimer = 0f;
             StartCoroutine(PerformWallJump());
         }
     }

@@ -28,12 +28,10 @@ public class TrailEffect : MonoBehaviour
 
     private void RenderDashTrail() {
         if (_playerMovement.IsDashing) {
-            Debug.Log(_trailDelaySeconds);
             if (_trailDelaySeconds > 0f) {
                 _trailDelaySeconds -= Time.deltaTime;
             }
             else {
-                Debug.Log("Rendering Trail");
                 GameObject currentTrail = Instantiate(_trailPrefab, transform.position, transform.rotation);
                 Sprite currentSprite = _playerSpriteRenderer.sprite;
                 currentTrail.GetComponent<SpriteRenderer>().sprite = currentSprite;
