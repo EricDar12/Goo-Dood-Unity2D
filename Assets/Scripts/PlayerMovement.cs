@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -35,7 +36,6 @@ public class PlayerMovement : MonoBehaviour {
     private float _horizontalMove;
     private float _verticalMove;
     private bool _isGrounded;
-    private bool _hasReleasedJump;
     private float _previousVelocityY;
     private bool _isModifyingGravity;
     private float _coyoteTimer;
@@ -47,6 +47,10 @@ public class PlayerMovement : MonoBehaviour {
     private float _fallTimer;
     private bool _isFacingLeft;
     private bool _isWalled;
+
+    private bool _isJumpHeld;
+    private bool _hasBufferedJump;
+    private bool _canCutJumpHeight;
 
     public float XVelocity { get; private set; }
     public float YVelocity { get; private set; }
@@ -72,7 +76,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void Update() {
-        CheckJumpInputReleased();
+        CheckJumpReleased();
         CaptureMovementInput();
         UpdateJumpBuffer();
         UpdateCoyoteTime();
@@ -111,12 +115,13 @@ public class PlayerMovement : MonoBehaviour {
     #region Jump Input and Checks
 
     private void Jump() {
-        if (!IsDashing && (_coyoteTimer > 0f && _jumpBufferTimer > 0f)) {
-            _rb.velocity = new Vector2(_rb.velocity.x * _forwardJumpBoost, _jumpForce);
-            _jumpBufferTimer = 0f;
-            _coyoteTimer = 0f;
-            IsJumping = true;
-        }
+
+        if (!CanJump()) return;
+
+        _rb.velocity = new Vector2(_rb.velocity.x * _forwardJumpBoost, _jumpForce);
+
+        ResetJumpState();
+        IsJumping = true;
     }
 
     private void CheckJumpState() {
@@ -135,7 +140,7 @@ public class PlayerMovement : MonoBehaviour {
         float currentVelocityY = _rb.velocity.y;
 
         // If jump is held, briefly apply half gravity at the apex of the jump
-        if ((IsJumping && !_hasReleasedJump) && !_isWallJumping && !_canWallJumpAgain
+        if ((IsJumping && _isJumpHeld) && !_isWallJumping && !_canWallJumpAgain
             && _previousVelocityY > 0f && currentVelocityY <= 0f) {
             _previousVelocityY = _rb.velocity.y;
             StartCoroutine(ReduceGravityAtJumpApex());
@@ -143,7 +148,7 @@ public class PlayerMovement : MonoBehaviour {
         }
 
         // If the player is falling naturally, smoothly lerp to higher gravity
-        if (!_hasReleasedJump && (!_isGrounded && _rb.velocity.y < 0.1f)) {
+        if (!_isJumpHeld && (!_isGrounded && _rb.velocity.y < 0.1f)) {
             _isFalling = true;
             _fallTimer += Time.deltaTime;
             float t = Mathf.Clamp01(_fallTimer / 0.7f);
@@ -167,12 +172,16 @@ public class PlayerMovement : MonoBehaviour {
         _isModifyingGravity = false;
     }
 
-    private void CheckJumpInputReleased() {
+    private void CheckJumpReleased() {
+
+        // Only cut the jump height once per jump
+        if (!_canCutJumpHeight) return;
+
         // If jump is released when the player is jumping && moving up, && neither dashing/wall jumping, cut the jump height 
-        if (Input.GetButtonUp("Jump") && IsJumping && (!_isWallJumping && !IsDashing) && _rb.velocity.y > 0.1f) {
-            _hasReleasedJump = true;
+        if (!_isJumpHeld && IsJumping && (!_isWallJumping && !IsDashing) && _rb.velocity.y > 0.1f) {
             ApplyGravity(_higherGravity);
             _rb.velocity = new Vector2(_rb.velocity.x, _rb.velocity.y * 0.65f);
+            _canCutJumpHeight = false;
         }
     }
 
@@ -188,15 +197,21 @@ public class PlayerMovement : MonoBehaviour {
     private void UpdateJumpBuffer() {
         if (Input.GetButtonDown("Jump")) {
             _jumpBufferTimer = _maxJumpBuffer;
+            _hasBufferedJump = true;
+            _isJumpHeld = true;
         }
         else if (_jumpBufferTimer > 0f) {
             _jumpBufferTimer -= Time.deltaTime;
+        }
+        if (Input.GetButtonUp("Jump")) {
+            // Track if jump is released at any point
+            _isJumpHeld = false;
         }
     }
 
     private void WallJump() {
         // If the player is against a wall && has released the jump button, or is falling naturally allow a wj input
-        if (_isWalled && (_hasReleasedJump || _canWallJumpAgain || _isFalling) && _jumpBufferTimer > 0f) {
+        if (_isWalled && (!_isJumpHeld || _canWallJumpAgain || _isFalling) && _jumpBufferTimer > 0f) {
             _jumpBufferTimer = 0f;
             StartCoroutine(PerformWallJump());
         }
@@ -210,7 +225,6 @@ public class PlayerMovement : MonoBehaviour {
 
         // Set flag for instantaneous wall jumping
         _canWallJumpAgain = true;
-        _hasReleasedJump = false;
 
         // Jump in the opposite direction the player is facing
         Vector2 wallJumpDirection = _isFacingLeft ? Vector2.right : Vector2.left;
@@ -243,7 +257,6 @@ public class PlayerMovement : MonoBehaviour {
         ApplyGravity(0f);
         IsDashing = true;
         _canDash = false;
-        _hasReleasedJump = false;
 
         Vector2 dashDirection = new Vector2(_horizontalMove, _verticalMove).normalized;
 
@@ -291,12 +304,22 @@ public class PlayerMovement : MonoBehaviour {
     #endregion
     #region Helper Methods
 
+    private bool CanJump() {
+        return (!IsDashing && (_coyoteTimer > 0f && _jumpBufferTimer > 0f));
+    }
+    
+    private void ResetJumpState() {
+        _jumpBufferTimer = 0f;
+        _coyoteTimer = 0f;
+        _hasBufferedJump = false;
+    }
+
     private void OnLanded() {
         IsJumping = false;
-        _hasReleasedJump = false;
         _canDash = true;
         _isWallJumping = false;
         _canWallJumpAgain = false;
+        _canCutJumpHeight = true;
         ApplyGravity(OriginalGravity);
     }
 
