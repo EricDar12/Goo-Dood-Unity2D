@@ -211,7 +211,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void WallJump() {
         // If the player is against a wall && has released the jump button, or is falling naturally allow a wj input
-        if (_isWalled && (!_isJumpHeld || _canWallJumpAgain || _isFalling) && _jumpBufferTimer > 0f) {
+        if (!_isWallJumping && _isWalled && (!_isJumpHeld || _canWallJumpAgain || _isFalling) && _jumpBufferTimer > 0f) {
             _jumpBufferTimer = 0f;
             StartCoroutine(PerformWallJump());
         }
