@@ -8,6 +8,8 @@ TagManager:
   - Spike
   - DashTrail
   - CameraTarget
+  - Entrance
+  - Exit
   layers:
   - Default
   - TransparentFX

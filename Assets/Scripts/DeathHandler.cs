@@ -5,12 +5,11 @@ using UnityEngine;
 public class DeathHandler : MonoBehaviour {
 
     [Header("Respawn Settings")]
-    [SerializeField] private Transform _respawnPoint;
-    [SerializeField] private float _respawnDelay;
+    [SerializeField] private float _respawnDelay = 1f;
 
     private Rigidbody2D _rb;
-    private Transform _checkPoint;
     private PlayerMovement _playerMovement;
+    private RoomController _roomController;
     
     public enum PlayerState {
         Alive,
@@ -24,6 +23,7 @@ public class DeathHandler : MonoBehaviour {
     void Start() {
         _playerMovement = GetComponent<PlayerMovement>();
         _rb = GetComponent<Rigidbody2D>();
+        _roomController = FindObjectOfType<RoomController>();
     }
 
     void Update() {
@@ -69,8 +69,7 @@ public class DeathHandler : MonoBehaviour {
         if (CurrentState == PlayerState.Respawning) {
 
             _rb.gravityScale = _playerMovement.OriginalGravity;
-            transform.position = _checkPoint != null ? _checkPoint.position : _respawnPoint.position;
-
+            _rb.transform.position = _roomController.CurrentSpawnPoint.position;
             if (_rb != null) {
                 _rb.velocity = Vector2.zero;
             }
@@ -80,7 +79,4 @@ public class DeathHandler : MonoBehaviour {
         }
     }
 
-    private void SetCheckPoint(Transform newCheckPoint) {
-        _checkPoint = newCheckPoint;
-    }
 }

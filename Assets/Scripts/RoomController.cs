@@ -3,13 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour {
+public class RoomController : MonoBehaviour {
 
     [Header("Virtual Camera Settings")]
     [SerializeField] private GameObject v_cam;
 
+    [Header("Room Settings")]
+    [SerializeField] private BoxCollider2D _entranceZone;
+    [SerializeField] private BoxCollider2D _exitZone;
+    [SerializeField] private Transform _defaultSpawnPoint;
+
+    public Transform CurrentSpawnPoint { get; private set; }
+
     void Start() {
-        
+        CurrentSpawnPoint = _defaultSpawnPoint;
     }
 
     void Update() {
