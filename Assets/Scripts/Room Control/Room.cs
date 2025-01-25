@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RoomController : MonoBehaviour {
+public class Room : MonoBehaviour {
 
     [Header("Virtual Camera Settings")]
     [SerializeField] private GameObject v_cam;
@@ -12,19 +12,22 @@ public class RoomController : MonoBehaviour {
     [SerializeField] private BoxCollider2D _entranceZone;
     [SerializeField] private BoxCollider2D _exitZone;
     [SerializeField] private Transform _defaultSpawnPoint;
+    public Transform PlayerSpawnPoint { get; private set; }
 
-    public Transform CurrentSpawnPoint { get; private set; }
-
-    void Start() {
-        CurrentSpawnPoint = _defaultSpawnPoint;
+    private void Start() {
+        PlayerSpawnPoint = _defaultSpawnPoint;
     }
 
-    void Update() {
-        
+    public void SetNewSpawnPoint(Transform spawnPoint) {
+        if (spawnPoint != null) {
+            PlayerSpawnPoint = spawnPoint;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
         if (collision.gameObject.CompareTag("Player") && !collision.isTrigger) {
+            // Set this room to the active room upon entering it
+            RoomManager.Instance.SetActiveRoom(this);
             v_cam.SetActive(true);
         }
     }
@@ -34,5 +37,4 @@ public class RoomController : MonoBehaviour {
             v_cam.SetActive(false);
         }
     }
-
 }
